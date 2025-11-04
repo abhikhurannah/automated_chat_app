@@ -1,0 +1,41 @@
+# Dependencies
+node_modules/
+backened/node_modules/
+frontened2/node_modules/
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+backened/.env
+frontened2/.env
+
+# Build outputs
+dist/
+build/
+backened/dist/
+frontened2/dist/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Misc
+.cache/
+*.bak
+*.tmp
