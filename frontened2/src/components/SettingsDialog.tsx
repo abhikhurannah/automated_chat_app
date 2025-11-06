@@ -112,8 +112,8 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
 
           {/* Footer */}
           <div className="text-center space-y-2">
-            <p className="text-xs text-muted-foreground">
-              Chatty v1.0.0
+            <p className="text-xs text-muted-foreground font-medium">
+              Chatty AI <span className="text-purple-500">v1.0.0</span>
             </p>
             <div className="flex justify-center gap-3 text-xs">
               <Button variant="link" size="sm" className="h-auto p-0 text-xs text-muted-foreground">

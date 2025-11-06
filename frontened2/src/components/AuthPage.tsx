@@ -52,8 +52,40 @@ export const AuthPage = () => {
               <MessageCircle className="w-8 h-8 text-primary-foreground" />
             </motion.div>
             <div>
-              <CardTitle className="text-3xl font-bold">Welcome to Chatty</CardTitle>
-              <CardDescription className="text-base mt-2">Connect and chat in real-time</CardDescription>
+              <CardTitle className="text-3xl font-bold flex items-center justify-center gap-2">
+                Welcome to Chatty{" "}
+                <motion.span 
+                  className="relative inline-block"
+                  animate={{ 
+                    scale: [1, 1.1, 1],
+                    rotate: [0, 5, -5, 0],
+                  }}
+                  transition={{ 
+                    duration: 3, 
+                    repeat: Infinity,
+                    ease: "easeInOut" 
+                  }}
+                >
+                  <span className="bg-gradient-to-r from-purple-500 via-blue-500 to-purple-500 bg-clip-text text-transparent font-extrabold relative z-10">
+                    AI
+                  </span>
+                  <motion.span 
+                    className="absolute inset-0 bg-gradient-to-r from-purple-400 via-blue-400 to-purple-400 blur-lg opacity-50"
+                    animate={{ 
+                      opacity: [0.3, 0.7, 0.3],
+                      scale: [1, 1.2, 1],
+                    }}
+                    transition={{ 
+                      duration: 3, 
+                      repeat: Infinity,
+                      ease: "easeInOut" 
+                    }}
+                  >
+                    AI
+                  </motion.span>
+                </motion.span>
+              </CardTitle>
+              <CardDescription className="text-base mt-2">AI-powered chat and real-time messaging</CardDescription>
             </div>
           </CardHeader>
           

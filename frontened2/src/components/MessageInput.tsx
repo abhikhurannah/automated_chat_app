@@ -1,12 +1,14 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Send, Image, X, Smile, Bot, Sparkles } from "lucide-react";
+import { Send, Image, X, Smile, Bot, Sparkles, MessageCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useChatStore } from "@/stores/useChatStore";
 import { useAIStore } from "@/stores/useAIStore";
+import { useAuthStore } from "@/stores/useAuthStore";
 import { AISuggestions } from "./AISuggestions";
 import { TypingSuggestions } from "./TypingSuggestions";
+import { ChatbotDialog } from "./ChatbotDialog";
 import toast from "react-hot-toast";
 import EmojiPicker, { EmojiClickData, Theme } from "emoji-picker-react";
 
@@ -26,19 +28,72 @@ export const MessageInput = ({ selectedUser }: MessageInputProps) => {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showAISuggestions, setShowAISuggestions] = useState(false);
+  const [showChatbot, setShowChatbot] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const { sendMessage, messages } = useChatStore();
+  const { authUser } = useAuthStore();
   const { 
     getReplySuggestions, 
     getTypingSuggestions, 
     typingSuggestions, 
     isAIEnabled,
-    clearSuggestions 
+    clearSuggestions,
+    setConversationContext,
+    selectedTone 
   } = useAIStore();
 
-  // Debounced typing suggestions
+  // Build conversation context from recent messages
+  const buildConversationContext = useCallback(() => {
+    const recentMessages = messages.slice(-10).map(msg => ({
+      text: msg.text || '[Image]',
+      senderId: msg.senderId,
+      timestamp: msg.createdAt
+    }));
+
+    // Determine relationship based on message patterns
+    const messageCount = messages.length;
+    const userMessages = messages.filter(m => m.senderId === authUser?._id).length;
+    const responsiveness = messageCount > 0 ? userMessages / messageCount : 0;
+
+    let relationship = 'neutral';
+    if (messageCount > 50) relationship = 'close';
+    else if (messageCount > 20) relationship = 'familiar';
+    else if (messageCount > 5) relationship = 'acquaintance';
+
+    // Extract topics from messages
+    const allText = messages.map(m => m.text).join(' ').toLowerCase();
+    const topics: string[] = [];
+    const topicKeywords = {
+      work: ['work', 'job', 'office', 'project', 'meeting'],
+      personal: ['family', 'friend', 'home', 'weekend'],
+      tech: ['code', 'programming', 'software', 'app'],
+      entertainment: ['movie', 'music', 'game', 'show']
+    };
+
+    Object.entries(topicKeywords).forEach(([topic, keywords]) => {
+      if (keywords.some(keyword => allText.includes(keyword))) {
+        topics.push(topic);
+      }
+    });
+
+    return {
+      messages: recentMessages,
+      userRelationship: relationship,
+      previousTopics: topics
+    };
+  }, [messages, authUser]);
+
+  // Update conversation context when messages change
+  useEffect(() => {
+    if (messages.length > 0 && isAIEnabled) {
+      const context = buildConversationContext();
+      setConversationContext(context);
+    }
+  }, [messages, isAIEnabled, buildConversationContext, setConversationContext]);
+
+  // Debounced typing suggestions with context
   const debouncedGetTypingSuggestions = useCallback(
     (() => {
       let timeoutId: NodeJS.Timeout;
@@ -46,12 +101,13 @@ export const MessageInput = ({ selectedUser }: MessageInputProps) => {
         clearTimeout(timeoutId);
         timeoutId = setTimeout(() => {
           if (currentText.length >= 2 && isAIEnabled) {
-            getTypingSuggestions(currentText, selectedUser._id);
+            const context = buildConversationContext();
+            getTypingSuggestions(currentText, selectedUser._id, context);
           }
         }, 300);
       };
     })(),
-    [getTypingSuggestions, selectedUser._id, isAIEnabled]
+    [getTypingSuggestions, selectedUser._id, isAIEnabled, buildConversationContext]
   );
 
   // Close emoji picker when clicking outside
@@ -78,29 +134,42 @@ export const MessageInput = ({ selectedUser }: MessageInputProps) => {
     debouncedGetTypingSuggestions(newText);
   };
 
-  // Get AI reply suggestions when user starts typing
+  // Get AI reply suggestions with full context
   const handleGetReplySuggestions = async () => {
-    console.log('🎯 Handle get reply suggestions clicked');
+    console.log('🎯 Getting context-aware reply suggestions');
     console.log('AI Enabled:', isAIEnabled);
     console.log('Selected User:', selectedUser);
-    console.log('Messages:', messages);
+    console.log('Messages:', messages.length);
+    console.log('Selected Tone:', selectedTone);
     
     if (!isAIEnabled) {
-      toast.error("AI is disabled");
+      toast.error("AI is disabled. Enable it from the navbar.");
+      return;
+    }
+
+    if (messages.length === 0) {
+      toast.error("No messages yet. Send a message first!");
       return;
     }
 
     try {
-      // Use the last message as the messageId for context, or create a simple fallback
+      // Use the last message as context
       const lastMessage = messages[messages.length - 1];
       const messageId = lastMessage?._id || 'latest';
+      const context = buildConversationContext();
       
-      console.log('🚀 Calling getReplySuggestions with:', { messageId, receiverId: selectedUser._id });
+      console.log('🚀 Calling getReplySuggestions with context:', { 
+        messageId, 
+        receiverId: selectedUser._id,
+        tone: selectedTone,
+        contextMessages: context.messages.length,
+        relationship: context.userRelationship
+      });
       
-      await getReplySuggestions(messageId, selectedUser._id);
+      await getReplySuggestions(messageId, selectedUser._id, context);
       setShowAISuggestions(true);
       
-      console.log('✅ getReplySuggestions completed');
+      console.log('✅ Reply suggestions loaded');
     } catch (error) {
       console.error('❌ Error in handleGetReplySuggestions:', error);
       toast.error('Failed to get AI suggestions');
@@ -131,6 +200,7 @@ export const MessageInput = ({ selectedUser }: MessageInputProps) => {
 
   const handleEmojiClick = (emojiData: EmojiClickData) => {
     setText((prev) => prev + emojiData.emoji);
+    inputRef.current?.focus();
   };
 
   const handleSuggestionClick = (suggestion: string) => {
@@ -234,39 +304,76 @@ export const MessageInput = ({ selectedUser }: MessageInputProps) => {
 
       {/* Message Form */}
       <form onSubmit={handleSubmit} className="flex items-center gap-2">
-        {/* AI Suggestions Button */}
+        {/* Chatbot Button */}
         <Button
           type="button"
           size="icon"
           variant="ghost"
-          onClick={handleGetReplySuggestions}
-          disabled={!isAIEnabled}
-          className={`h-10 w-10 flex-shrink-0 transition-all ${
-            isAIEnabled 
-              ? 'text-purple-500 hover:text-purple-600 hover:bg-purple-50 hover:scale-110' 
-              : 'text-muted-foreground opacity-50 cursor-not-allowed'
-          }`}
-          title={isAIEnabled ? "Get AI suggestions" : "AI is disabled"}
-        >
-          <Bot className="h-5 w-5" />
-        </Button>
-
-        {/* Smart Suggestions Button */}
-        <Button
-          type="button"
-          size="icon"
-          variant="ghost"
-          onClick={handleGetReplySuggestions}
+          onClick={() => setShowChatbot(true)}
           disabled={!isAIEnabled}
           className={`h-10 w-10 flex-shrink-0 transition-all ${
             isAIEnabled 
               ? 'text-blue-500 hover:text-blue-600 hover:bg-blue-50 hover:scale-110' 
               : 'text-muted-foreground opacity-50 cursor-not-allowed'
           }`}
-          title={isAIEnabled ? "Smart reply suggestions" : "AI is disabled"}
+          title={isAIEnabled ? "Chat with AI Assistant" : "AI is disabled"}
         >
-          <Sparkles className="h-5 w-5" />
+          <MessageCircle className="h-5 w-5" />
         </Button>
+
+        {/* AI Suggestions Button */}
+        <Button
+          type="button"
+          size="icon"
+          variant="ghost"
+          onClick={handleGetReplySuggestions}
+          disabled={!isAIEnabled || messages.length === 0}
+          className={`h-10 w-10 flex-shrink-0 transition-all relative ${
+            isAIEnabled && messages.length > 0
+              ? 'text-purple-500 hover:text-purple-600 hover:bg-purple-50 hover:scale-110' 
+              : 'text-muted-foreground opacity-50 cursor-not-allowed'
+          }`}
+          title={
+            !isAIEnabled 
+              ? "AI is disabled" 
+              : messages.length === 0 
+                ? "Send a message first" 
+                : `Get ${selectedTone} reply suggestions`
+          }
+        >
+          <Bot className="h-5 w-5" />
+          {isAIEnabled && messages.length > 0 && (
+            <motion.div
+              animate={{ scale: [1, 1.2, 1] }}
+              transition={{ duration: 2, repeat: Infinity }}
+              className="absolute -top-1 -right-1 w-2 h-2 bg-purple-500 rounded-full"
+            />
+          )}
+        </Button>
+
+        {/* Smart Suggestions Button with Tone Badge */}
+        <div className="relative">
+          <Button
+            type="button"
+            size="icon"
+            variant="ghost"
+            onClick={handleGetReplySuggestions}
+            disabled={!isAIEnabled || messages.length === 0}
+            className={`h-10 w-10 flex-shrink-0 transition-all ${
+              isAIEnabled && messages.length > 0
+                ? 'text-blue-500 hover:text-blue-600 hover:bg-blue-50 hover:scale-110' 
+                : 'text-muted-foreground opacity-50 cursor-not-allowed'
+            }`}
+            title={`Smart suggestions (${selectedTone})`}
+          >
+            <Sparkles className="h-5 w-5" />
+          </Button>
+          {isAIEnabled && (
+            <span className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 text-[8px] font-bold text-purple-500 uppercase">
+              {selectedTone.slice(0, 3)}
+            </span>
+          )}
+        </div>
 
         {/* Image Upload */}
         <input
@@ -309,7 +416,7 @@ export const MessageInput = ({ selectedUser }: MessageInputProps) => {
           <Input
             ref={inputRef}
             type="text"
-            placeholder={`Message ${selectedUser.fullname}...`}
+            placeholder={`Message ${selectedUser.fullname}... ${isAIEnabled ? '(AI-powered ✨)' : ''}`}
             value={text}
             onChange={handleTextChange}
             onKeyDown={(e) => {
@@ -339,6 +446,12 @@ export const MessageInput = ({ selectedUser }: MessageInputProps) => {
           <Send className="h-5 w-5" />
         </Button>
       </form>
+
+      {/* Chatbot Dialog */}
+      <ChatbotDialog 
+        isOpen={showChatbot}
+        onClose={() => setShowChatbot(false)}
+      />
     </div>
   );
 };

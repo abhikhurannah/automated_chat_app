@@ -40,12 +40,41 @@ export const ChatArea = ({ contact }: ChatAreaProps) => {
           
           {/* Welcome Text */}
           <div className="space-y-3">
-            <h3 className="text-2xl lg:text-3xl font-bold text-foreground">
-              Welcome to Chatty
+            <h3 className="text-2xl lg:text-3xl font-bold text-foreground flex items-center justify-center gap-2">
+              Welcome to Chatty{" "}
+              <motion.span 
+                className="relative inline-block"
+                animate={{ 
+                  y: [0, -5, 0],
+                  scale: [1, 1.05, 1],
+                }}
+                transition={{ 
+                  duration: 2.5, 
+                  repeat: Infinity,
+                  ease: "easeInOut" 
+                }}
+              >
+                <span className="bg-gradient-to-r from-purple-500 via-blue-500 to-purple-500 bg-clip-text text-transparent font-extrabold relative z-10">
+                  AI
+                </span>
+                <motion.span 
+                  className="absolute inset-0 bg-gradient-to-r from-purple-400 via-blue-400 to-purple-400 blur-md opacity-40"
+                  animate={{ 
+                    opacity: [0.2, 0.5, 0.2],
+                  }}
+                  transition={{ 
+                    duration: 2.5, 
+                    repeat: Infinity,
+                    ease: "easeInOut" 
+                  }}
+                >
+                  AI
+                </motion.span>
+              </motion.span>
             </h3>
             
             <p className="text-muted-foreground text-base lg:text-lg">
-              Select a contact to start messaging
+              Select a contact to start AI-powered messaging
             </p>
           </div>
 

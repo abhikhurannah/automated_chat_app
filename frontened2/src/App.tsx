@@ -23,7 +23,13 @@ const App = () => {
             <div className="animate-spin rounded-full h-16 w-16 border-4 border-purple-300/30 border-t-purple-400 mx-auto"></div>
             <div className="absolute inset-0 animate-ping rounded-full h-16 w-16 border-2 border-purple-400/50"></div>
           </div>
-          <p className="text-white/80 mt-4 text-lg font-medium">Loading Chatty...</p>
+          <p className="text-white/80 mt-4 text-lg font-medium">
+            Loading Chatty{" "}
+            <span className="bg-gradient-to-r from-purple-300 via-blue-300 to-purple-300 bg-clip-text text-transparent font-extrabold animate-pulse">
+              AI
+            </span>
+            ...
+          </p>
         </div>
       </div>
     );
