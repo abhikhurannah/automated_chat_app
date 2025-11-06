@@ -7,6 +7,22 @@
 [![React](https://img.shields.io/badge/React-18.0-61dafb.svg)](https://reactjs.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-18+-339933.svg)](https://nodejs.org/)
 
+## 🎬 Watch Chatty AI in Action
+
+<div align="center">
+
+### 🚀 Complete Application Demo
+
+https://github.com/user-attachments/assets/chattyAI.mp4
+
+*Experience the future of AI-powered messaging - from smart suggestions to real-time conversations*
+
+</div>
+
+## 📋 Quick Navigation
+
+- [🎬 Demo Video](#-watch-chatty-ai-in-action) | [✨ Features](#-complete-feature-list) | [🚀 Quick Start](#-quick-start-5-minutes) | [🛠️ Installation](#️-detailed-installation-guide) | [🎥 Features in Action](#-features-in-action)
+
 ---
 
 ## 📖 Application Overview
@@ -21,6 +37,14 @@
 - **🔒 Privacy-First**: Local AI processing with secure authentication
 - **📱 Responsive Design**: Works perfectly on desktop and mobile devices
 - **🌙 Dark/Light Modes**: Multiple themes with system sync
+
+## 🎬 Demo Video
+
+> **See Chatty AI in Action!** Watch our demo video to experience the full power of AI-enhanced messaging.
+
+https://github.com/user-attachments/assets/chattyAI.mp4
+
+*🎥 The video showcases real-time messaging, AI suggestions, beautiful animations, and the complete user experience of Chatty AI.*
 
 ---
 
@@ -301,6 +325,9 @@ POST   /api/chatbot/analyze/:id   - Conversation analysis
 
 ## 🚀 Quick Start (5 minutes)
 
+> 🎬 **Want to see it first?** Check out our [demo video](#-watch-chatty-ai-in-action) to see all features in action!
+
+### 1. Install Dependencies
 ```bash
 cd backened
 npm install
@@ -492,7 +519,30 @@ open http://localhost:5173
 
 ---
 
-## 🎨 User Interface Guide
+## � Features in Action
+
+### 📹 Complete Application Demo
+
+Watch how all the features work together seamlessly:
+
+https://github.com/user-attachments/assets/chattyAI.mp4
+
+### 🌟 Key Highlights from the Video:
+
+- **🤖 AI-Powered Suggestions**: See smart reply suggestions generated in real-time based on conversation context
+- **⚡ Real-time Messaging**: Experience instant message delivery with typing indicators and online presence
+- **🎨 Beautiful Animations**: Floating bubbles sidebar with physics-based animations and smooth transitions
+- **🎭 AI Tone Selection**: Switch between different AI personalities (casual, professional, friendly, etc.)
+- **📱 Responsive Design**: Works perfectly on both desktop and mobile devices
+- **🌙 Theme System**: Dark/light mode switching with beautiful color schemes
+- **🖼️ Media Sharing**: Upload and share images with automatic compression
+- **💬 Interactive Chatbot**: Direct conversation with AI assistant in dedicated dialog
+
+*💡 **Pro Tip**: The video shows the complete workflow from registration to advanced AI features. Watch how the AI analyzes conversation context to provide relevant suggestions!*
+
+---
+
+## �🎨 User Interface Guide
 
 ### Main Components
 
