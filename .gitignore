@@ -1,7 +1,6 @@
 # Dependencies
 node_modules/
-backened/node_modules/
-frontened2/node_modules/
+*/node_modules/
 
 # Environment variables
 .env
@@ -9,14 +8,13 @@ frontened2/node_modules/
 .env.development.local
 .env.test.local
 .env.production.local
-backened/.env
-frontened2/.env
+*/.env
 
 # Build outputs
 dist/
 build/
-backened/dist/
-frontened2/dist/
+*/dist/
+*/build/
 
 # Logs
 npm-debug.log*
@@ -35,7 +33,27 @@ Thumbs.db
 *.swo
 *~
 
-# Misc
+# Testing
+coverage/
+*.test.js
+*.test.ts
+*.test.tsx
+test-*.js
+*test*.js
+*Test*.tsx
+*Test*.ts
+
+# Documentation (if you want to ignore them)
+*.md
+!README.md
+
+# Temporary files
 .cache/
 *.bak
 *.tmp
+*.temp
+cookies.txt
+
+# Development artifacts
+*.orig
+*.rej

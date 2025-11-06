@@ -1,9 +1,12 @@
-import { useState, useRef, useEffect } from "react";
-import { Send, Image, X, Smile } from "lucide-react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { Send, Image, X, Smile, Bot, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useChatStore } from "@/stores/useChatStore";
+import { useAIStore } from "@/stores/useAIStore";
+import { AISuggestions } from "./AISuggestions";
+import { TypingSuggestions } from "./TypingSuggestions";
 import toast from "react-hot-toast";
 import EmojiPicker, { EmojiClickData, Theme } from "emoji-picker-react";
 
@@ -22,9 +25,34 @@ export const MessageInput = ({ selectedUser }: MessageInputProps) => {
   const [text, setText] = useState("");
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showAISuggestions, setShowAISuggestions] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
-  const { sendMessage } = useChatStore();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const { sendMessage, messages } = useChatStore();
+  const { 
+    getReplySuggestions, 
+    getTypingSuggestions, 
+    typingSuggestions, 
+    isAIEnabled,
+    clearSuggestions 
+  } = useAIStore();
+
+  // Debounced typing suggestions
+  const debouncedGetTypingSuggestions = useCallback(
+    (() => {
+      let timeoutId: NodeJS.Timeout;
+      return (currentText: string) => {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
+          if (currentText.length >= 2 && isAIEnabled) {
+            getTypingSuggestions(currentText, selectedUser._id);
+          }
+        }, 300);
+      };
+    })(),
+    [getTypingSuggestions, selectedUser._id, isAIEnabled]
+  );
 
   // Close emoji picker when clicking outside
   useEffect(() => {
@@ -42,6 +70,42 @@ export const MessageInput = ({ selectedUser }: MessageInputProps) => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [showEmojiPicker]);
+
+  // Handle text changes and trigger typing suggestions
+  const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newText = e.target.value;
+    setText(newText);
+    debouncedGetTypingSuggestions(newText);
+  };
+
+  // Get AI reply suggestions when user starts typing
+  const handleGetReplySuggestions = async () => {
+    console.log('🎯 Handle get reply suggestions clicked');
+    console.log('AI Enabled:', isAIEnabled);
+    console.log('Selected User:', selectedUser);
+    console.log('Messages:', messages);
+    
+    if (!isAIEnabled) {
+      toast.error("AI is disabled");
+      return;
+    }
+
+    try {
+      // Use the last message as the messageId for context, or create a simple fallback
+      const lastMessage = messages[messages.length - 1];
+      const messageId = lastMessage?._id || 'latest';
+      
+      console.log('🚀 Calling getReplySuggestions with:', { messageId, receiverId: selectedUser._id });
+      
+      await getReplySuggestions(messageId, selectedUser._id);
+      setShowAISuggestions(true);
+      
+      console.log('✅ getReplySuggestions completed');
+    } catch (error) {
+      console.error('❌ Error in handleGetReplySuggestions:', error);
+      toast.error('Failed to get AI suggestions');
+    }
+  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -69,6 +133,19 @@ export const MessageInput = ({ selectedUser }: MessageInputProps) => {
     setText((prev) => prev + emojiData.emoji);
   };
 
+  const handleSuggestionClick = (suggestion: string) => {
+    setText(suggestion);
+    setShowAISuggestions(false);
+    clearSuggestions();
+    inputRef.current?.focus();
+  };
+
+  const handleTypingSuggestionClick = (suggestion: string) => {
+    setText(suggestion);
+    clearSuggestions();
+    inputRef.current?.focus();
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!text.trim() && !imagePreview) return;
@@ -82,6 +159,8 @@ export const MessageInput = ({ selectedUser }: MessageInputProps) => {
       setText("");
       setImagePreview(null);
       setShowEmojiPicker(false);
+      setShowAISuggestions(false);
+      clearSuggestions();
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
@@ -92,6 +171,13 @@ export const MessageInput = ({ selectedUser }: MessageInputProps) => {
 
   return (
     <div className="space-y-3 relative">
+      {/* AI Reply Suggestions */}
+      <AISuggestions
+        onSuggestionClick={handleSuggestionClick}
+        onClose={() => setShowAISuggestions(false)}
+        isVisible={showAISuggestions}
+      />
+
       {/* Emoji Picker */}
       <AnimatePresence>
         {showEmojiPicker && (
@@ -148,6 +234,40 @@ export const MessageInput = ({ selectedUser }: MessageInputProps) => {
 
       {/* Message Form */}
       <form onSubmit={handleSubmit} className="flex items-center gap-2">
+        {/* AI Suggestions Button */}
+        <Button
+          type="button"
+          size="icon"
+          variant="ghost"
+          onClick={handleGetReplySuggestions}
+          disabled={!isAIEnabled}
+          className={`h-10 w-10 flex-shrink-0 transition-all ${
+            isAIEnabled 
+              ? 'text-purple-500 hover:text-purple-600 hover:bg-purple-50 hover:scale-110' 
+              : 'text-muted-foreground opacity-50 cursor-not-allowed'
+          }`}
+          title={isAIEnabled ? "Get AI suggestions" : "AI is disabled"}
+        >
+          <Bot className="h-5 w-5" />
+        </Button>
+
+        {/* Smart Suggestions Button */}
+        <Button
+          type="button"
+          size="icon"
+          variant="ghost"
+          onClick={handleGetReplySuggestions}
+          disabled={!isAIEnabled}
+          className={`h-10 w-10 flex-shrink-0 transition-all ${
+            isAIEnabled 
+              ? 'text-blue-500 hover:text-blue-600 hover:bg-blue-50 hover:scale-110' 
+              : 'text-muted-foreground opacity-50 cursor-not-allowed'
+          }`}
+          title={isAIEnabled ? "Smart reply suggestions" : "AI is disabled"}
+        >
+          <Sparkles className="h-5 w-5" />
+        </Button>
+
         {/* Image Upload */}
         <input
           type="file"
@@ -185,19 +305,27 @@ export const MessageInput = ({ selectedUser }: MessageInputProps) => {
         </Button>
 
         {/* Text Input */}
-        <div className="flex-1">
+        <div className="flex-1 relative">
           <Input
+            ref={inputRef}
             type="text"
             placeholder={`Message ${selectedUser.fullname}...`}
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            onChange={handleTextChange}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 handleSubmit(e);
               }
             }}
-            className="h-10 bg-muted/30 border-border rounded-full px-4"
+            className="h-10 bg-muted/30 border-border rounded-full px-4 pr-12"
+          />
+          
+          {/* Typing Suggestions */}
+          <TypingSuggestions
+            suggestions={typingSuggestions}
+            onSuggestionClick={handleTypingSuggestionClick}
+            isVisible={typingSuggestions.length > 0 && text.length >= 2}
           />
         </div>
 

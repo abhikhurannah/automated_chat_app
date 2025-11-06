@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { SettingsDialog } from "./SettingsDialog";
+import { AIToggle } from "./AIToggle";
 import { useAuthStore } from "@/stores/useAuthStore";
 
 export const Navbar = () => {
@@ -54,6 +55,9 @@ export const Navbar = () => {
 
         {/* User Menu */}
         <div className="flex items-center gap-2">
+          {/* AI Toggle */}
+          <AIToggle />
+          
           {/* Settings Button */}
           <Button
             variant="ghost"

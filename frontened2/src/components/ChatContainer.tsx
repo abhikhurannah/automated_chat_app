@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Phone, Video, MoreVertical, Heart, ThumbsUp, Smile, Star, CheckCheck } from "lucide-react";
+import { Phone, Video, MoreVertical, Heart, ThumbsUp, Smile, Star, CheckCheck, BarChart3 } from "lucide-react";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useChatStore } from "@/stores/useChatStore";
 import { MessageInput } from "./MessageInput";
 import { ImageViewer } from "./ImageViewer";
+import { AIAnalysis } from "./AIAnalysis";
 import { formatMessageTime } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -29,6 +30,7 @@ export const ChatContainer = ({ selectedUser }: ChatContainerProps) => {
   const [selectedImage, setSelectedImage] = useState<{ src: string; alt: string } | null>(null);
   const [hoveredMessage, setHoveredMessage] = useState<string | null>(null);
   const [messageReactions, setMessageReactions] = useState<Record<string, string[]>>({});
+  const [showAnalysis, setShowAnalysis] = useState(false);
 
   const isOnline = onlineUsers.includes(selectedUser._id);
 
@@ -129,6 +131,16 @@ export const ChatContainer = ({ selectedUser }: ChatContainerProps) => {
 
           {/* Action Buttons */}
           <div className="flex items-center gap-1">
+            <Button 
+              size="icon" 
+              variant="ghost" 
+              onClick={() => setShowAnalysis(true)}
+              className="h-9 w-9 text-muted-foreground hover:text-purple-600 hover:bg-purple-50"
+              title="AI Analysis"
+            >
+              <BarChart3 className="h-5 w-5" />
+            </Button>
+            
             {[Phone, Video, MoreVertical].map((Icon, i) => (
               <Button 
                 key={i}
@@ -331,6 +343,14 @@ export const ChatContainer = ({ selectedUser }: ChatContainerProps) => {
         alt={selectedImage?.alt || ""}
         isOpen={!!selectedImage}
         onClose={() => setSelectedImage(null)}
+      />
+
+      {/* AI Analysis */}
+      <AIAnalysis
+        selectedUserId={selectedUser._id}
+        userName={selectedUser.fullname}
+        isVisible={showAnalysis}
+        onClose={() => setShowAnalysis(false)}
       />
     </div>
   );
