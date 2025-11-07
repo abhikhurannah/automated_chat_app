@@ -1,30 +1,5 @@
 # 🤖 Chatty AI - Intelligent Real-time Messaging Platform
 
-> *The future of messaging is here - Experience AI-powered conversations with beautiful animations and real-time connectivity*
-
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/abhikhurannah/automated_chat_app)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![React](https://img.shields.io/badge/React-18.0-61dafb.svg)](https://reactjs.org/)
-[![Node.js](https://img.shields.io/badge/Node.js-18+-339933.svg)](https://nodejs.org/)
-
-## 🎬 Watch Chatty AI in Action
-
-<div align="center">
-
-### 🚀 Complete Application Demo
-
-https://github.com/user-attachments/assets/chattyAI.mp4
-
-*Experience the future of AI-powered messaging - from smart suggestions to real-time conversations*
-
-</div>
-
-## 📋 Quick Navigation
-
-- [🎬 Demo Video](#-watch-chatty-ai-in-action) | [✨ Features](#-complete-feature-list) | [🚀 Quick Start](#-quick-start-5-minutes) | [🛠️ Installation](#️-detailed-installation-guide) | [🎥 Features in Action](#-features-in-action)
-
----
-
 ## 📖 Application Overview
 
 **Chatty AI** is a modern, full-stack real-time messaging application that combines the power of artificial intelligence with seamless user experience. Built with cutting-edge technologies, it offers intelligent message suggestions, real-time communication, and a beautiful animated interface.
@@ -352,6 +327,8 @@ JWT_SECRET=your_random_secret_key_here
 
 ### 4. Start Backend Server
 ```bash
+# Start Ollama (if using local AI)
+ollama serve
 # Development mode (auto-restart)
 npm run dev
 
