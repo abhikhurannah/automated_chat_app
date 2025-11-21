@@ -240,7 +240,7 @@ export const MessageInput = ({ selectedUser }: MessageInputProps) => {
   };
 
   return (
-    <div className="space-y-3 relative">
+    <div className="space-y-3 relative px-2 sm:px-0">
       {/* AI Reply Suggestions */}
       <AISuggestions
         onSuggestionClick={handleSuggestionClick}
@@ -257,13 +257,13 @@ export const MessageInput = ({ selectedUser }: MessageInputProps) => {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 10 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            className="absolute bottom-12 mb-2 left-0 z-50"
+            className="absolute bottom-20 mb-2 left-1 z-50"
           >
             <div className="backdrop-blur-xl bg-card/95 border border-border rounded-xl shadow-2xl overflow-hidden">
               <EmojiPicker
                 onEmojiClick={handleEmojiClick}
-                width={300}
-                height={280}
+                width={250}
+                height={250}
                 theme={(document.documentElement.classList.contains('dark') ? Theme.DARK : Theme.LIGHT)}
                 searchPlaceHolder="Search emoji..."
                 previewConfig={{ showPreview: false }}
@@ -303,148 +303,240 @@ export const MessageInput = ({ selectedUser }: MessageInputProps) => {
       </AnimatePresence>
 
       {/* Message Form */}
-      <form onSubmit={handleSubmit} className="flex items-center gap-2">
-        {/* Chatbot Button */}
-        <Button
-          type="button"
-          size="icon"
-          variant="ghost"
-          onClick={() => setShowChatbot(true)}
-          disabled={!isAIEnabled}
-          className={`h-10 w-10 flex-shrink-0 transition-all ${
-            isAIEnabled 
-              ? 'text-blue-500 hover:text-blue-600 hover:bg-blue-50 hover:scale-110' 
-              : 'text-muted-foreground opacity-50 cursor-not-allowed'
-          }`}
-          title={isAIEnabled ? "Chat with AI Assistant" : "AI is disabled"}
-        >
-          <MessageCircle className="h-5 w-5" />
-        </Button>
+      <form onSubmit={handleSubmit} className="space-y-2 sm:space-y-0">
+        {/* Input Row - Full width on mobile, with buttons on desktop */}
+        <div className="flex items-center gap-1.5 sm:gap-2 w-full">
+          {/* Desktop: Show all buttons before input */}
+          <div className="hidden sm:flex items-center gap-2">
+            {/* Chatbot Button */}
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              onClick={() => setShowChatbot(true)}
+              disabled={!isAIEnabled}
+              className={`h-10 w-10 flex-shrink-0 transition-all ${
+                isAIEnabled 
+                  ? 'text-blue-500 hover:text-blue-600 hover:bg-blue-50 hover:scale-110' 
+                  : 'text-muted-foreground opacity-50 cursor-not-allowed'
+              }`}
+              title={isAIEnabled ? "Chat with AI Assistant" : "AI is disabled"}
+            >
+              <MessageCircle className="h-5 w-5" />
+            </Button>
 
-        {/* AI Suggestions Button */}
-        <Button
-          type="button"
-          size="icon"
-          variant="ghost"
-          onClick={handleGetReplySuggestions}
-          disabled={!isAIEnabled || messages.length === 0}
-          className={`h-10 w-10 flex-shrink-0 transition-all relative ${
-            isAIEnabled && messages.length > 0
-              ? 'text-purple-500 hover:text-purple-600 hover:bg-purple-50 hover:scale-110' 
-              : 'text-muted-foreground opacity-50 cursor-not-allowed'
-          }`}
-          title={
-            !isAIEnabled 
-              ? "AI is disabled" 
-              : messages.length === 0 
-                ? "Send a message first" 
-                : `Get ${selectedTone} reply suggestions`
-          }
-        >
-          <Bot className="h-5 w-5" />
-          {isAIEnabled && messages.length > 0 && (
-            <motion.div
-              animate={{ scale: [1, 1.2, 1] }}
-              transition={{ duration: 2, repeat: Infinity }}
-              className="absolute -top-1 -right-1 w-2 h-2 bg-purple-500 rounded-full"
+            {/* AI Suggestions Button */}
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              onClick={handleGetReplySuggestions}
+              disabled={!isAIEnabled || messages.length === 0}
+              className={`h-10 w-10 flex-shrink-0 transition-all relative ${
+                isAIEnabled && messages.length > 0
+                  ? 'text-purple-500 hover:text-purple-600 hover:bg-purple-50 hover:scale-110' 
+                  : 'text-muted-foreground opacity-50 cursor-not-allowed'
+              }`}
+              title={
+                !isAIEnabled 
+                  ? "AI is disabled" 
+                  : messages.length === 0 
+                    ? "Send a message first" 
+                    : `Get ${selectedTone} reply suggestions`
+              }
+            >
+              <Bot className="h-5 w-5" />
+              {isAIEnabled && messages.length > 0 && (
+                <motion.div
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                  className="absolute -top-1 -right-1 w-2 h-2 bg-purple-500 rounded-full"
+                />
+              )}
+            </Button>
+
+            {/* Smart Suggestions Button with Tone Badge */}
+            <div className="relative">
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                onClick={handleGetReplySuggestions}
+                disabled={!isAIEnabled || messages.length === 0}
+                className={`h-10 w-10 flex-shrink-0 transition-all ${
+                  isAIEnabled && messages.length > 0
+                    ? 'text-blue-500 hover:text-blue-600 hover:bg-blue-50 hover:scale-110' 
+                    : 'text-muted-foreground opacity-50 cursor-not-allowed'
+                }`}
+                title={`Smart suggestions (${selectedTone})`}
+              >
+                <Sparkles className="h-5 w-5" />
+              </Button>
+              {isAIEnabled && (
+                <span className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 text-[8px] font-bold text-purple-500 uppercase">
+                  {selectedTone.slice(0, 3)}
+                </span>
+              )}
+            </div>
+
+            {/* Image Upload */}
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              ref={fileInputRef}
+              onChange={handleImageChange}
             />
-          )}
-        </Button>
+            
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              onClick={() => fileInputRef.current?.click()}
+              className="h-10 w-10 flex-shrink-0 text-muted-foreground hover:text-foreground"
+              title="Upload image"
+            >
+              <Image className="h-5 w-5" />
+            </Button>
 
-        {/* Smart Suggestions Button with Tone Badge */}
-        <div className="relative">
+            {/* Emoji Picker Button */}
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+              className={`h-10 w-10 flex-shrink-0 transition-all ${
+                showEmojiPicker 
+                  ? 'text-primary bg-primary/10 scale-110' 
+                  : 'text-muted-foreground hover:text-foreground hover:scale-110'
+              }`}
+              title="Add emoji"
+            >
+              <Smile className="h-5 w-5" />
+            </Button>
+          </div>
+
+          {/* Text Input - Full width on mobile */}
+          <div className="flex-1 relative min-w-0">
+            <Input
+              ref={inputRef}
+              type="text"
+              placeholder={`Message ${selectedUser.fullname}...`}
+              value={text}
+              onChange={handleTextChange}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSubmit(e);
+                }
+              }}
+              className="h-10 w-full bg-muted/30 border-border rounded-full px-4 pr-12 text-sm sm:text-base"
+            />
+            
+            {/* Typing Suggestions */}
+            <TypingSuggestions
+              suggestions={typingSuggestions}
+              onSuggestionClick={handleTypingSuggestionClick}
+              isVisible={typingSuggestions.length > 0 && text.length >= 2}
+            />
+          </div>
+
+          {/* Send Button - Always visible */}
+          <Button 
+            type="submit" 
+            size="icon"
+            disabled={!text.trim() && !imagePreview}
+            className="h-10 w-10 flex-shrink-0 bg-gradient-to-br from-primary to-secondary hover:opacity-90 rounded-full disabled:opacity-40 transition-opacity"
+          >
+            <Send className="h-5 w-5" />
+          </Button>
+        </div>
+
+        {/* Mobile: Show buttons below input */}
+        <div className="flex sm:hidden items-center justify-center gap-3 pt-1">
+          {/* Chatbot Button */}
+          <Button
+            type="button"
+            size="icon"
+            variant="ghost"
+            onClick={() => setShowChatbot(true)}
+            disabled={!isAIEnabled}
+            className={`h-9 w-9 flex-shrink-0 transition-all ${
+              isAIEnabled 
+                ? 'text-blue-500 hover:text-blue-600 hover:bg-blue-50 hover:scale-110' 
+                : 'text-muted-foreground opacity-50 cursor-not-allowed'
+            }`}
+            title={isAIEnabled ? "Chat with AI Assistant" : "AI is disabled"}
+          >
+            <MessageCircle className="h-5 w-5" />
+          </Button>
+
+          {/* AI Suggestions Button */}
           <Button
             type="button"
             size="icon"
             variant="ghost"
             onClick={handleGetReplySuggestions}
             disabled={!isAIEnabled || messages.length === 0}
-            className={`h-10 w-10 flex-shrink-0 transition-all ${
+            className={`h-9 w-9 flex-shrink-0 transition-all relative ${
               isAIEnabled && messages.length > 0
-                ? 'text-blue-500 hover:text-blue-600 hover:bg-blue-50 hover:scale-110' 
+                ? 'text-purple-500 hover:text-purple-600 hover:bg-purple-50 hover:scale-110' 
                 : 'text-muted-foreground opacity-50 cursor-not-allowed'
             }`}
-            title={`Smart suggestions (${selectedTone})`}
+            title={
+              !isAIEnabled 
+                ? "AI is disabled" 
+                : messages.length === 0 
+                  ? "Send a message first" 
+                  : `Get ${selectedTone} reply suggestions`
+            }
           >
             <Sparkles className="h-5 w-5" />
+            {isAIEnabled && messages.length > 0 && (
+              <motion.div
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="absolute -top-1 -right-1 w-2 h-2 bg-purple-500 rounded-full"
+              />
+            )}
           </Button>
-          {isAIEnabled && (
-            <span className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 text-[8px] font-bold text-purple-500 uppercase">
-              {selectedTone.slice(0, 3)}
-            </span>
-          )}
-        </div>
 
-        {/* Image Upload */}
-        <input
-          type="file"
-          accept="image/*"
-          className="hidden"
-          ref={fileInputRef}
-          onChange={handleImageChange}
-        />
-        
-        <Button
-          type="button"
-          size="icon"
-          variant="ghost"
-          onClick={() => fileInputRef.current?.click()}
-          className="h-10 w-10 flex-shrink-0 text-muted-foreground hover:text-foreground"
-          title="Upload image"
-        >
-          <Image className="h-5 w-5" />
-        </Button>
-
-        {/* Emoji Picker Button */}
-        <Button
-          type="button"
-          size="icon"
-          variant="ghost"
-          onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-          className={`h-10 w-10 flex-shrink-0 transition-all ${
-            showEmojiPicker 
-              ? 'text-primary bg-primary/10 scale-110' 
-              : 'text-muted-foreground hover:text-foreground hover:scale-110'
-          }`}
-          title="Add emoji"
-        >
-          <Smile className="h-5 w-5" />
-        </Button>
-
-        {/* Text Input */}
-        <div className="flex-1 relative">
-          <Input
-            ref={inputRef}
-            type="text"
-            placeholder={`Message ${selectedUser.fullname}... ${isAIEnabled ? '(AI-powered ✨)' : ''}`}
-            value={text}
-            onChange={handleTextChange}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSubmit(e);
-              }
-            }}
-            className="h-10 bg-muted/30 border-border rounded-full px-4 pr-12"
+          {/* Image Upload */}
+          <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            ref={fileInputRef}
+            onChange={handleImageChange}
           />
           
-          {/* Typing Suggestions */}
-          <TypingSuggestions
-            suggestions={typingSuggestions}
-            onSuggestionClick={handleTypingSuggestionClick}
-            isVisible={typingSuggestions.length > 0 && text.length >= 2}
-          />
-        </div>
+          <Button
+            type="button"
+            size="icon"
+            variant="ghost"
+            onClick={() => fileInputRef.current?.click()}
+            className="h-9 w-9 flex-shrink-0 text-muted-foreground hover:text-foreground"
+            title="Upload image"
+          >
+            <Image className="h-5 w-5" />
+          </Button>
 
-        {/* Send Button */}
-        <Button 
-          type="submit" 
-          size="icon"
-          disabled={!text.trim() && !imagePreview}
-          className="h-10 w-10 flex-shrink-0 bg-gradient-to-br from-primary to-secondary hover:opacity-90 rounded-full disabled:opacity-40 transition-opacity"
-        >
-          <Send className="h-5 w-5" />
-        </Button>
+          {/* Emoji Picker Button */}
+          <Button
+            type="button"
+            size="icon"
+            variant="ghost"
+            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+            className={`h-9 w-9 flex-shrink-0 transition-all ${
+              showEmojiPicker 
+                ? 'text-primary bg-primary/10 scale-110' 
+                : 'text-muted-foreground hover:text-foreground hover:scale-110'
+            }`}
+            title="Add emoji"
+          >
+            <Smile className="h-5 w-5" />
+          </Button>
+        </div>
       </form>
 
       {/* Chatbot Dialog */}

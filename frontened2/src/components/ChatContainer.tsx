@@ -333,7 +333,7 @@ export const ChatContainer = ({ selectedUser }: ChatContainerProps) => {
       </div>
 
       {/* Message Input */}
-      <div className="p-4 bottom-0 lg:px-6 lg:pb-6 border-t border-border bg-card/30">
+      <div className="p-2 sm:p-4 lg:px-6 lg:pb-6 border-t border-border bg-card/30">
         <MessageInput selectedUser={selectedUser} />
       </div>
 
