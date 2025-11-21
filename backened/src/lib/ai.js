@@ -6,9 +6,9 @@ dotenv.config();
 class AIService {
   constructor() {
     this.provider = process.env.AI_PROVIDER || 'ollama';
-    this.apiKey = process.env.GROK_API_KEY || process.env.OPENAI_API_KEY;
+    this.apiKey = process.env.GEMINI_API_KEY || process.env.GROK_API_KEY || process.env.OPENAI_API_KEY;
     this.apiUrl = this.getApiUrl();
-    this.model = process.env.AI_MODEL || 'llama3.2:3b';
+    this.model = process.env.AI_MODEL || 'gemini-2.0-flash';
     this.maxTokens = parseInt(process.env.AI_MAX_TOKENS) || 200;
     this.temperature = parseFloat(process.env.AI_TEMPERATURE) || 0.8;
     
@@ -24,6 +24,8 @@ class AIService {
 
   getApiUrl() {
     switch (this.provider) {
+      case 'gemini':
+        return 'https://generativelanguage.googleapis.com/v1beta';
       case 'ollama':
         return process.env.OLLAMA_API_URL || 'http://localhost:11434';
       case 'grok':
@@ -108,6 +110,8 @@ class AIService {
       
       if (this.provider === 'ollama') {
         response = await this.generateWithOllama(prompt, tone);
+      } else if (this.provider === 'gemini') {
+        response = await this.generateWithGemini(prompt, tone);
       } else {
         response = await this.generateWithCloudAPI(prompt, tone);
       }
@@ -125,7 +129,7 @@ class AIService {
       
     } catch (error) {
       console.error('❌ AI Service Error:', error.response?.data || error.message);
-      return this.getFallbackSuggestions(currentMessage, tone);
+      return this.getFallbackSuggestions(currentMessage, options.tone || 'casual');
     }
   }
 
@@ -200,6 +204,64 @@ class AIService {
       choices: [{
         message: {
           content: response.data.response
+        }
+      }]
+    };
+  }
+
+  /**
+   * Generate with Gemini API
+   */
+  async generateWithGemini(prompt, tone = 'casual') {
+    console.log('🤖 Using Gemini...');
+    
+    const requestData = {
+      contents: [
+        {
+          parts: [
+            {
+              text: prompt
+            }
+          ]
+        }
+      ],
+      generationConfig: {
+        temperature: this.getToneTemperature(tone),
+        maxOutputTokens: Math.max(this.maxTokens, 500),
+        topP: 0.95,
+        topK: 64
+      }
+    };
+
+    const response = await axios.post(
+      `${this.apiUrl}/models/${this.model}:generateContent?key=${this.apiKey}`,
+      requestData,
+      {
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        timeout: 30000
+      }
+    );
+
+    // Check if there's content and parts
+    const candidate = response.data.candidates[0];
+    let content = '';
+    
+    if (candidate.content && candidate.content.parts && candidate.content.parts.length > 0) {
+      content = candidate.content.parts[0].text;
+    } else if (candidate.content && candidate.content.text) {
+      content = candidate.content.text;
+    } else {
+      console.log('⚠️  No content found in Gemini response');
+      content = 'No content available';
+    }
+    
+    // Convert Gemini response format to match expected format
+    return {
+      choices: [{
+        message: {
+          content: content
         }
       }]
     };
@@ -291,8 +353,35 @@ Return responses as a clean JSON array of strings only.`;
         }
         
         return suggestions;
+      } else if (this.provider === 'gemini') {
+        // Gemini API response parsing
+        content = responseData.choices[0].message.content.trim();
+        
+        // Try JSON parse first
+        let suggestions;
+        if (content.startsWith('[') && content.endsWith(']')) {
+          suggestions = JSON.parse(content);
+        } else {
+          const jsonMatch = content.match(/\[[\s\S]*\]/);
+          if (jsonMatch) {
+            suggestions = JSON.parse(jsonMatch[0]);
+          } else {
+            // Parse as lines
+            suggestions = content.split('\n')
+              .filter(line => line.trim().length > 0)
+              .map(line => line.replace(/^[-*\d.)"']+\s*/, '').replace(/^["']|["']$/g, '').trim())
+              .filter(line => line.length > 5)
+              .slice(0, 3);
+          }
+        }
+        
+        while (suggestions.length < 3) {
+          suggestions.push(this.getDefaultReply(tone));
+        }
+        
+        return suggestions.slice(0, 3);
       } else {
-        // Cloud API
+        // Cloud API (OpenAI/Grok)
         content = responseData.choices[0].message.content.trim();
         
         // Try JSON parse
@@ -432,8 +521,43 @@ Provide concise, natural responses. Be engaging and helpful.`
         );
         
         return response.data.response.trim();
+      } else if (this.provider === 'gemini') {
+        // Gemini API
+        let conversationText = `${messages[0].content}\n\n`;
+        messages.slice(1).forEach(msg => {
+          conversationText += `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}\n`;
+        });
+        
+        const response = await axios.post(
+          `${this.apiUrl}/models/${this.model}:generateContent?key=${this.apiKey}`,
+          {
+            contents: [
+              {
+                parts: [
+                  {
+                    text: conversationText
+                  }
+                ]
+              }
+            ],
+            generationConfig: {
+              temperature: this.getToneTemperature(tone),
+              maxOutputTokens: 200,
+              topP: 0.95,
+              topK: 64
+            }
+          },
+          {
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            timeout: 30000
+          }
+        );
+        
+        return response.data.candidates[0].content.parts[0].text.trim();
       } else {
-        // Cloud API
+        // Cloud API (OpenAI/Grok)
         const response = await axios.post(
           `${this.apiUrl}/chat/completions`,
           {
@@ -518,6 +642,39 @@ Return ONLY a JSON object in this exact format:
         if (jsonMatch) {
           return JSON.parse(jsonMatch[0]);
         }
+      } else if (this.provider === 'gemini') {
+        response = await axios.post(
+          `${this.apiUrl}/models/${this.model}:generateContent?key=${this.apiKey}`,
+          {
+            contents: [
+              {
+                parts: [
+                  {
+                    text: `You are a conversation analyst. Return ONLY valid JSON, no markdown.\n\n${prompt}`
+                  }
+                ]
+              }
+            ],
+            generationConfig: {
+              temperature: 0.3,
+              maxOutputTokens: 300,
+              topP: 0.95,
+              topK: 64
+            }
+          },
+          {
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            timeout: 30000
+          }
+        );
+        
+        const content = response.data.candidates[0].content.parts[0].text.trim();
+        const jsonMatch = content.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          return JSON.parse(jsonMatch[0]);
+        }
       } else {
         response = await axios.post(
           `${this.apiUrl}/chat/completions`,
@@ -585,6 +742,9 @@ Return ONLY a JSON object in this exact format:
     if (this.provider === 'ollama') {
       return !!this.apiUrl;
     }
+    if (this.provider === 'gemini') {
+      return !!(this.apiKey && this.apiUrl);
+    }
     return !!(this.apiKey && this.apiUrl);
   }
 
@@ -609,6 +769,38 @@ Return ONLY a JSON object in this exact format:
           console.log('⚠️  Model not found:', this.model);
           console.log('💡 Available models:', models.join(', '));
           console.log('💡 Run: ollama pull', this.model);
+        }
+      } else if (this.provider === 'gemini') {
+        if (this.apiKey) {
+          try {
+            // Test Gemini API with a simple request
+            const response = await axios.post(
+              `${this.apiUrl}/models/${this.model}:generateContent?key=${this.apiKey}`,
+              {
+                contents: [
+                  {
+                    parts: [
+                      {
+                        text: 'Hello'
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                timeout: 5000
+              }
+            );
+            console.log('✅ Gemini API connected successfully');
+            console.log('✅ Model available:', this.model);
+          } catch (testError) {
+            console.log('⚠️  Gemini API test failed:', testError.response?.data?.error?.message || testError.message);
+          }
+        } else {
+          console.log('⚠️  No Gemini API key found');
         }
       } else {
         if (this.apiKey) {

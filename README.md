@@ -9,7 +9,7 @@
 - **🧠 AI-Powered Intelligence**: Get smart reply suggestions, typing completions, and conversation analysis
 - **⚡ Real-time Everything**: Instant messaging, typing indicators, and online presence
 - **🎨 Beautiful UI**: Animated interfaces with floating bubbles and smooth transitions
-- **🔒 Privacy-First**: Local AI processing with secure authentication
+- **🔒 Secure & Smart**: Google Gemini AI integration with secure authentication
 - **📱 Responsive Design**: Works perfectly on desktop and mobile devices
 - **🌙 Dark/Light Modes**: Multiple themes with system sync
 
@@ -387,12 +387,16 @@ CLOUDINARY_CLOUD_NAME=your-cloud-name
 CLOUDINARY_API_KEY=your-api-key
 CLOUDINARY_API_SECRET=your-api-secret
 
-# AI Configuration
-AI_PROVIDER=ollama
-OLLAMA_API_URL=http://localhost:11434
-AI_MODEL=llama3.2:3b
-AI_MAX_TOKENS=200
-AI_TEMPERATURE=0.8
+# AI Configuration (Primary: Gemini)
+AI_PROVIDER=gemini
+GEMINI_API_KEY=your-gemini-api-key-here
+AI_MODEL=gemini-2.0-flash
+AI_MAX_TOKENS=500
+AI_TEMPERATURE=0.7
+
+# Alternative AI Providers
+# OLLAMA_API_URL=http://localhost:11434  # For local AI
+# OPENAI_API_KEY=your-openai-key         # For OpenAI
 ```
 
 #### Database Setup Options
