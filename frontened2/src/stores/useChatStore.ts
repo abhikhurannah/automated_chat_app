@@ -37,7 +37,7 @@ interface ChatState {
 
 // Generic API request function
 async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-  const url = `${API_BASE_URL}/api${endpoint}`;
+  const url = `${API_BASE_URL}${endpoint}`;
   
   const config: RequestInit = {
     headers: {
@@ -72,7 +72,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   getUsers: async () => {
     set({ isUsersLoading: true });
     try {
-      const users = await apiRequest<User[]>('/messages/users');
+      const users = await apiRequest<User[]>('/api/messages/users');
       set({ users });
     } catch (error) {
       console.error("Error fetching users:", error);
@@ -85,7 +85,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   getMessages: async (userId: string) => {
     set({ isMessagesLoading: true });
     try {
-      const messages = await apiRequest<Message[]>(`/messages/${userId}`);
+      const messages = await apiRequest<Message[]>(`/api/messages/${userId}`);
       set({ messages });
     } catch (error) {
       console.error("Error fetching messages:", error);
@@ -100,7 +100,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     if (!selectedUser) return;
 
     try {
-      const newMessage = await apiRequest<Message>(`/messages/send/${selectedUser._id}`, {
+      const newMessage = await apiRequest<Message>(`/api/messages/send/${selectedUser._id}`, {
         method: 'POST',
         body: JSON.stringify(messageData),
       });

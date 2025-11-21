@@ -31,7 +31,7 @@ interface AuthState {
 
 // Generic API request function
 async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-  const url = `${API_BASE_URL}/api${endpoint}`;
+  const url = `${API_BASE_URL}${endpoint}`;
   
   const config: RequestInit = {
     headers: {
@@ -63,7 +63,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   checkAuth: async () => {
     try {
-      const user = await apiRequest<User>('/auth/check');
+      const user = await apiRequest<User>('/api/auth/check');
       set({ authUser: user });
       get().connectSocket();
     } catch (error) {
@@ -77,7 +77,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   signup: async (data) => {
     set({ isSigningUp: true });
     try {
-      const user = await apiRequest<User>('/auth/signup', {
+      const user = await apiRequest<User>('/api/auth/signup', {
         method: 'POST',
         body: JSON.stringify(data),
       });
@@ -95,7 +95,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   login: async (data) => {
     set({ isLoggingIn: true });
     try {
-      const user = await apiRequest<User>('/auth/login', {
+      const user = await apiRequest<User>('/api/auth/login', {
         method: 'POST',
         body: JSON.stringify(data),
       });
@@ -125,7 +125,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   updateProfile: async (data) => {
     set({ isUpdatingProfile: true });
     try {
-      const user = await apiRequest<User>('/auth/update-profile', {
+      const user = await apiRequest<User>('/api/auth/update-profile', {
         method: 'PUT',
         body: data,
         headers: {}, // Let browser set Content-Type for FormData
