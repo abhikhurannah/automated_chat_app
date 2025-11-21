@@ -9,7 +9,7 @@ import cors from "cors"
 import {app,server} from "./lib/socket.js"
 
 dotenv.config();
-const PORT= process.env.PORT || 3000;
+const PORT= process.env.PORT || 5001;
 
 // increase body size limits to allow base64 image uploads from frontend
 app.use(express.json({ limit: '10mb' }));
@@ -21,7 +21,7 @@ app.use(cors({
         "http://localhost:5174", 
         "http://localhost:5175",
         "https://chatty-ai.vercel.app",  // Add your Vercel URL here
-        // Add your actual Vercel URL after deployment
+        "https://empathetic-creativity-production.up.railway.app/"
     ],
     credentials: true
 }));
